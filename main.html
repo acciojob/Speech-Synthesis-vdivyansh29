@@ -35,8 +35,63 @@
   const options = document.querySelectorAll('[type="range"], [name="text"]');
   const speakButton = document.querySelector('#speak');
   const stopButton = document.querySelector('#stop');
+  const textArea = document.querySelector('textarea');
+  const rate = document.querySelector('input[name="rate"]');
+  const pitch = document.querySelector('input[name="pitch"]');
 
-  //Your code goes here
+  function populateVoices() {
+    voices = speechSynthesis.getVoices();
+    voicesDropdown.innerHTML = "";
+
+    if (voices.length === 0) {
+      const option = document.createElement("option");
+      option.textContent = "No voices available";
+      voicesDropdown.append(option);
+      return;
+    }
+
+    voices.forEach((voice, index) => {
+      const option = document.createElement("option");
+      option.value = index;
+      option.textContent = ${voice.name} (${voice.lang});
+      voicesDropdown.append(option);
+    });
+
+    voicesDropdown.selectedIndex = 0;
+  }
+
+  speechSynthesis.onvoiceschanged = populateVoices;
+
+  function speak() {
+    if (!textArea.value.trim()) return;
+
+    const utterance = new SpeechSynthesisUtterance(textArea.value);
+
+    if (voices[voicesDropdown.value]) {
+      utterance.voice = voices[voicesDropdown.value];
+    }
+
+    utterance.rate = parseFloat(rate.value);
+    utterance.pitch = parseFloat(pitch.value);
+
+    speechSynthesis.cancel();
+    speechSynthesis.speak(utterance);
+  }
+
+  function stopSpeaking() {
+    speechSynthesis.cancel();
+  }
+
+  speakButton.addEventListener("click", speak);
+  stopButton.addEventListener("click", stopSpeaking);
+
+  [voicesDropdown, rate, pitch].forEach(el => {
+    el.addEventListener("change", () => {
+      if (speechSynthesis.speaking) {
+        speak();
+      }
+    });
+  });
 </script>
 
 </body>
